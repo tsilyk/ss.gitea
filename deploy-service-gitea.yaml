@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: gitea-database
+  labels:
+    app: k8s-gitea-db
+spec:
+  selector:
+    matchLabels:
+        project: gitea-database
+  template:
+    metadata:
+      labels:
+        project: gitea-database
+    spec:
+      containers:
+        - name: gitea-db
+          image: mysql:8
+          ports:
+            - containerPort: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: gitea-deployment
+  labels:
+    app: k8s-gitea
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+        project: gitea-service
+  template:
+    metadata:
+      labels:
+        project: gitea-service
+    spec:
+      containers:
+        - name: gitea-server
+          image: tsilyk/gitea-server:latest
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-autoscaling-pod
+  labels:
+    env: prod
+    owner: YuriyTsilyk
+spec:
+  selector:
+    project: gitea-service
+  ports:
+    - name: app-listener
+      protocol: TCP
+      port: 80
+      targetPort: 3000  
+  type: ClusterIP  
+

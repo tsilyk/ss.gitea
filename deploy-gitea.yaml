@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: gitea-deployment
+  labels:
+    app: k8s-gitea
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+        project: gitea
+  template:
+    metadata:
+      labels:
+        project: gitea
+    spec:
+      containers:
+        - name: gitea-server
+          image: tsilyk/gitea-server:latest
+          ports:
+            - containerPort: 80
+
