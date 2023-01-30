@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-mysql
+  labels:
+    app: gitea
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: gitea
+    tier: mysql
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    app: gitea
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea-mysql
+  labels:
+    app: gitea
+spec:
+  selector:
+    matchLabels:
+      app: gitea
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gitea
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: "MYSQL_ROOT_PASSWORD"
+          value: "password"
+        - name: "MYSQL_DATABASE"
+          value: "gitea_db"
+        - name: "MYSQL_USER"
+          value: "gitea"
+        - name: "MYSQL_PASSWORD"
+          value: "gitea1"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
